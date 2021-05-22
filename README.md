@@ -40,6 +40,8 @@ The first time you start up the bot it will create a `config.json` and a `ignore
 In the `config.json` you have to enter your discord bot's token that you got when you created the bot and also add your discord user id to the array called `masters`.
 To close to the bot press ctrl + c
 
+Create a folder called `sounds` in the bots directory and add the sound you want the bot to loop when someone is talking.
+Call the sound `sound.mp3`. That will be the default sound that is used everytime you start up the bot, you can change the sound when the bot is running with /sound (will first finish the current sound or you have to let the bot rejoin the channel to reset its sound)
 
 ## Built With
 
