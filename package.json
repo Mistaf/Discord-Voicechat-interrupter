@@ -1,0 +1,24 @@
+{
+  "name": "vc-interrupter",
+  "version": "1.0.0",
+  "description": "interrupts someone when talking on discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pkg": "pkg ./index.js --targets latest-win-x64"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mistaf/Discord-Voicechat-interrupter.git"
+  },
+  "author": "Mistaf",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mistaf/Discord-Voicechat-interrupter/issues"
+  },
+  "homepage": "https://github.com/Mistaf/Discord-Voicechat-interrupter#readme",
+  "dependencies": {
+    "@discordjs/opus": "^0.5.0",
+    "discord.js": "^12.5.3"
+  }
+}
