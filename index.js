@@ -11,19 +11,22 @@ bot.on('ready',()=>{
 });
 ignorelist = JSON.parse(fs.readFileSync('./ignorelist.json'));
 bot.on('message', message =>{
-    console.log(message.content);
     if(!config.masters.includes(message.author.id))return;
     const args = message.content.split(' ').slice(1);
+    if(args.length<1)args[0]='';
     if(message.content.toLowerCase().startsWith("/join")){
-        const channel = getChannelID(message,args[0]);
+        const channel = getChannel(message,args[0]);
         if(channel)
             channel.join();
         else message.reply(`Could not find channel with the id \`${channelID}\``);
     }
     else if(message.content.toLowerCase().startsWith("/leave")){
-        const channel = getChannelID(message,args[0]);
-        if(channel)
+        const channel = getChannel(message,args[0]);
+        if(channel){
+            joinBAck[bot.guilds.cache.find(g=>g.channels.cache.find(c=>c.id==channel.id)).id] = true;
             channel.leave();
+            console.log(joinBAck);
+        }
         else message.reply(`im not in the channel with the id \`${channelID}\``);
     }
 
@@ -67,28 +70,33 @@ bot.on("voiceStateUpdate",(oldState, newState)=>{
     
     //AUTO JOIN BACK + RESET SPEAKERS OBJECT
     if(newState.id==bot.user.id){
-        if(!newState.channel){
-            if(activeChannels[oldState.channelID]){
-                activeChannels[oldState.channelID].destroy();
-                delete activeChannels[oldState.channelID];
-            }
-            return;
-        }
-        //pause song mid move
-        if(activeChannels[oldState.channelID])
-            activeChannels[oldState.channelID].pause();
+        // if(!newState.channel){
+        //     if(activeChannels[oldState.channelID]){
+        //         activeChannels[oldState.channelID].destroy();
+        //         delete activeChannels[oldState.channelID];
+        //     }
+        //     return;
+        // }
+
 
         if(oldState.channel&&oldState.channel!=newState.channel){
 
             speakers[oldState.channel.id]=[];
-
-            if(!joinBAck[newState.guild.id]){joinBAck[newState.guild.id]=true;
+           
+            if(activeChannels[oldState.channelID]){
+                activeChannels[oldState.channelID].destroy();
+                delete activeChannels[oldState.channelID];
+            }
+            console.log(joinBAck[oldState.guild.id]);
+            if(!joinBAck[oldState.guild.id]){
+                joinBAck[oldState.guild.id]=true;
                 if(oldState.channel)oldState.channel.join();
             }
-            else if(joinBAck[newState.guild.id])joinBAck[newState.guild.id]=false;
+            else if(joinBAck[oldState.guild.id])joinBAck[oldState.guild.id]=false;
+            console.log(joinBAck);
         }
 
-        if(newState.member.id == bot.user.id)
+        if(newState.member.id == bot.user.id && newState.channel)
             newState.channel.members.forEach(member=>{
                 speaking(member,member.voice.speaking)
             })
@@ -100,7 +108,7 @@ bot.on("guildMemberSpeaking",(member,isSpeaking)=>{
     speaking(member,isSpeaking.bitfield);
 });
 
-function getChannelID(message,arg){
+function getChannel(message,arg){
     if(arg.toLowerCase() == "me"&&message.member)
         return message.member.voice.channel;
     return bot.channels.cache.find(channel => channel.id==arg);
