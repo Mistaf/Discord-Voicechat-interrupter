@@ -15,19 +15,25 @@ bot.on('message', message =>{
     const args = message.content.split(' ').slice(1);
     if(args.length<1)args[0]='';
     if(message.content.toLowerCase().startsWith("/join")){
+        ignoreJoinBack = false;
         const channel = getChannel(message,args[0]);
         if(channel)
             channel.join();
-        else message.reply(`Could not find channel with the id \`${channelID}\``);
+        else message.reply(`Could not find channel with the id \`${args[0]}\``);
     }
     else if(message.content.toLowerCase().startsWith("/leave")){
+        if(args[0]==''){
+            ignoreJoinBack = true;
+            bot.voice.connections.forEach(ch=>{ch.disconnect();});
+            return;
+        }
         const channel = getChannel(message,args[0]);
         if(channel){
-            joinBAck[bot.guilds.cache.find(g=>g.channels.cache.find(c=>c.id==channel.id)).id] = true;
+            joinBack[bot.guilds.cache.find(g=>g.channels.cache.find(c=>c.id==channel.id)).id] = true;
             channel.leave();
-            console.log(joinBAck);
+            console.log(joinBack);
         }
-        else message.reply(`im not in the channel with the id \`${channelID}\``);
+        else message.reply(`im not in the channel with the id \`${args[0]}\``);
     }
 
     else if(message.content.toLowerCase().startsWith('/ignore')){
@@ -57,7 +63,8 @@ bot.on('message', message =>{
 
 });
 
-var joinBAck = {};
+var joinBack = {};
+let ignoreJoinBack = false;
 bot.on("voiceStateUpdate",(oldState, newState)=>{
   //AUTO UNMUTE
     if(newState.id==bot.user.id){
@@ -87,13 +94,13 @@ bot.on("voiceStateUpdate",(oldState, newState)=>{
                 activeChannels[oldState.channelID].destroy();
                 delete activeChannels[oldState.channelID];
             }
-            console.log(joinBAck[oldState.guild.id]);
-            if(!joinBAck[oldState.guild.id]){
-                joinBAck[oldState.guild.id]=true;
-                if(oldState.channel)oldState.channel.join();
+            if(!ignoreJoinBack){
+                if(!joinBack[oldState.guild.id]){
+                    joinBack[oldState.guild.id]=true;
+                    if(oldState.channel)oldState.channel.join();
+                }
+                else if(joinBack[oldState.guild.id])joinBack[oldState.guild.id]=false;
             }
-            else if(joinBAck[oldState.guild.id])joinBAck[oldState.guild.id]=false;
-            console.log(joinBAck);
         }
 
         if(newState.member.id == bot.user.id && newState.channel)
@@ -120,9 +127,11 @@ function getUserId(message){
     if(user){
         return user.id;
     }else{
-        user = message.guild.members.cache.find(member =>member.displayName.toLowerCase()==arg.toLowerCase()||member.user.username.toLowerCase()==arg.toLowerCase());
-        if(user)
-            return user.id
+        if(message.guild){
+            user = message.guild.members.cache.find(member =>member.displayName.toLowerCase()==arg.toLowerCase()||member.user.username.toLowerCase()==arg.toLowerCase());
+            if(user)
+                return user.id
+        }
         return arg;
     }
 }
